@@ -170,7 +170,7 @@ def load_dictionary_from_json_file(filename: str):
         return ret
 
 def append_list_to_file(lst: list, filename: str):
-    with open(get_local_data_path(filename), 'a') as f:
+    with open(get_local_data_path(filename), 'a', encoding='utf-8') as f:
         for item in lst:
             f.write("%s\n" % item)
     f.close()
@@ -271,6 +271,8 @@ def fetch_all_artist_data_from_file(filename: str):
     start_time = time.time()
 
     for i, suffix in enumerate(url_sufix_list):
+        if i <= 4557:
+            continue;
         url = "{0}/{1}".format(discogs_base_url, suffix)
         print("Processing {0}. - {1}".format(i, url))
         page = get_soup_with_html(url)
