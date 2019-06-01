@@ -280,7 +280,8 @@ def extract_credits_from_tracklist_html(tracklist_html: str):
     ret = {
         'lyrics': [],
         'music': [],
-        'arranged': []
+        'arranged': [],
+        'vocals': []
     }
 
     if tracklist_html == None or tracklist_html == "" or tracklist_html == "None":
@@ -312,9 +313,13 @@ def extract_credits_from_tracklist_html(tracklist_html: str):
         if 'arranged' in text:
             ret['arranged'].extend(urls)
 
+        if 'vocal' in text:
+            ret['vocals'].extend(urls)
+
     ret['lyrics'] = list(set(ret['lyrics']))
     ret['music'] = list(set(ret['music']))
     ret['arranged'] = list(set(ret['arranged']))
+    ret['vocals'] = list(set(ret['vocals']))
 
     return ret
 
@@ -325,7 +330,8 @@ def extract_credits_from_credits_html(credits_html: str):
     ret = {
         'lyrics': [],
         'music': [],
-        'arranged': []
+        'arranged': [],
+        'vocals': []
     }
 
     if credits_html == None or credits_html == "" or credits_html == "None":
@@ -357,9 +363,13 @@ def extract_credits_from_credits_html(credits_html: str):
         if 'arranged' in text:
             ret['arranged'].extend(urls)
 
+        if 'vocal' in text:
+            ret['vocals'].extend(urls)
+
     ret['lyrics'] = list(set(ret['lyrics']))
     ret['music'] = list(set(ret['music']))
     ret['arranged'] = list(set(ret['arranged']))
+    ret['vocals'] = list(set(ret['vocals']))
 
     return ret
 
@@ -367,17 +377,20 @@ def merge_two_credits(credits1: dict, credits2: dict):
     ret = {
         'lyrics': set(),
         'music': set(),
-        'arranged': set()
+        'arranged': set(),
+        'vocals': set()
     }
 
     for credits in [credits1, credits2]:
         ret['lyrics'].update(credits['lyrics'])
         ret['music'].update(credits['music'])
         ret['arranged'].update(credits['arranged'])
+        ret['vocals'].update(credits['vocals'])
 
     ret['lyrics'] = list(ret['lyrics'])
     ret['music'] = list(ret['music'])
     ret['arranged'] = list(ret['arranged'])
+    ret['vocals'] = list(ret['vocals'])
 
     return ret
 
@@ -419,7 +432,7 @@ def count_credits_from_artists():
 
     artists = dict()
     for artist in artists_list:
-        artists[artist] = {'lyrics': 0, 'music': 0, 'arranged': 0}
+        artists[artist] = {'lyrics': 0, 'music': 0, 'arranged': 0, 'vocals': 0}
 
     album_data = load_dictionary_from_json_file('albums.json')
 
@@ -515,8 +528,8 @@ if __name__ == '__main__':
 
     #extract_data_from_albums('albums.json')
 
-    #count_credits_from_artists()
+    count_credits_from_artists()
 
-    merge_songs(91)
+    #merge_songs(91)
 
     print("Done")
