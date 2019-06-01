@@ -2,6 +2,7 @@ import datetime
 import sqlite3
 import os
 from util import *
+import json
 
 sql_create_album_table_string = 'CREATE TABLE albums (' \
                             'url text, ' \
@@ -94,6 +95,9 @@ def row_to_artist(row: tuple):
         'vocals_cnt': row[12],
     }
 
+    if artist['sites'] != None:
+        artist['sites'] = json.loads(row[10])
+
     return artist
 
 def fetch_all_albums_from_database():
@@ -177,6 +181,6 @@ if __name__ == '__main__':
     #insert_all_artists_into_database('updated_artist_secondary_data.json')
 
     #print(fetch_all_albums_from_database())
-    #print(fetch_all_artists_from_database())
+    print(fetch_all_artists_from_database())
 
     print('Done')
