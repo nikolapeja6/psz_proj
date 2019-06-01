@@ -6,6 +6,7 @@ import os
 import csv
 import datetime
 import json
+from util import *
 
 def get_soup_with_html(url: str):
 
@@ -159,18 +160,10 @@ def extract_relevant_html_from_album_page(page: BeautifulSoup, url: str, i: int)
     return [title, tracklist, credits, versions]
 
 
-def save_dictionary_to_json_file(file_name: str, data):
 
-    with open(get_local_data_path(file_name), 'w') as fp:
-        json.dump(data, fp, indent=4, sort_keys=True)
-
-def load_dictionary_from_json_file(filename: str):
-    with open(get_local_data_path(filename)) as file:
-        ret = json.load(file)
-        return ret
 
 def append_list_to_file(lst: list, filename: str):
-    with open(get_local_data_path(filename), 'a') as f:
+    with open(get_local_data_path(filename), 'a', encoding='utf-8') as f:
         for item in lst:
             f.write("%s\n" % item)
     f.close()
@@ -226,6 +219,21 @@ def merge_album_data(countries: list):
 
     save_dictionary_to_json_file('albums.json', all_data)
 
+def merge_artist_data():
+    all_data = list()
+
+    folder_name = 'Artists'
+    folder_path = get_local_data_path(folder_name)
+
+    for file in os.listdir(folder_path):
+        print(file)
+        data_item = load_dictionary_from_json_file(os.path.join(folder_name, file))
+        all_data.append(data_item)
+
+    print('Saving...')
+
+    save_dictionary_to_json_file('artist_data.json', all_data)
+
 def extract_artists_from_album_data():
     album_data = load_dictionary_from_json_file('albums.json')
     print("Starting...")
@@ -270,7 +278,7 @@ def fetch_all_artist_data_from_file(filename: str):
 
     start_time = time.time()
 
-    for i, suffix in enumerate(url_sufix_list):
+    for i, suffix in reversed(list(enumerate(url_sufix_list))):
         url = "{0}/{1}".format(discogs_base_url, suffix)
         print("Processing {0}. - {1}".format(i, url))
         page = get_soup_with_html(url)
@@ -282,20 +290,91 @@ def fetch_all_artist_data_from_file(filename: str):
 
     print("Executed in {0}s".format(end_time-start_time))
 
-def append_row_to_file(lst: list, filename: str):
-    with open(get_local_data_path(filename), mode='a', encoding='utf-8', newline='') as file:
-        csv_writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, )
+def extract_songs_from_tracklist(page: BeautifulSoup):
+    table = page.find('table')
 
-        csv_writer.writerow(lst)
-    file.close()
+    if table == None:
+        return []
 
-def check_and_create_local_data_dir():
-    if not os.path.exists(local_data_dir):
-        os.makedirs(local_data_dir)
+    links_to_songs_wrappers = table.find_all('td', attrs={'class': 'track tracklist_track_title'})
 
-def get_local_data_path(filename: str):
-    check_and_create_local_data_dir()
-    return os.path.join(local_data_dir, filename)
+    if links_to_songs_wrappers == None:
+        return []
+
+    links_to_songs = list()
+    for song in links_to_songs_wrappers:
+        if song.find('a') != None:
+            links_to_songs.append(song.a['href'])
+
+    return links_to_songs
+
+
+def extract_songs_from_albums():
+    albums = load_dictionary_from_json_file('albums.json')
+
+    ret = list()
+
+    for counry, albums in albums.items():
+        print(counry)
+        for album in albums:
+            tracklist_html = album['tracklist']
+
+            if tracklist_html == None:
+                continue
+
+            tracklist_page = BeautifulSoup(tracklist_html, 'html.parser')
+
+            song_links = extract_songs_from_tracklist(tracklist_page)
+
+            ret.extend(song_links)
+
+    save_dictionary_to_json_file('songs.json', ret)
+
+proxy_index: int = 0
+proxies = [
+    "156.239.15.203:6604",
+    "194.8.146.167:31654",
+    "188.128.56.93:8080",
+    "217.182.120.165:1080",
+    "101.109.245.154:32820",
+    "114.6.131.141:34758",
+    "78.60.130.181:32596",
+    "131.108.166.3:80",
+    "61.247.178.218:50691",
+    "95.31.22.157:51804"
+]
+
+def get_actual_song_url(url: str):
+    url = "{0}/{1}".format(discogs_base_url, url)
+
+    try:
+        response = requests.get(url, headers={'User-agent': 'bot'})
+        # time.sleep(0.5)
+
+        if response:
+            return response.url
+        else:
+            print("Blocked - {0}".format(response.status_code))
+            if response.status_code == 404:
+                append_list_to_file([url], 'TODO_404.csv')
+                return None
+            time.sleep(60)
+            # if last_sleep < 60:
+            #    last_sleep*=2
+    except:
+        time.sleep(60 * 5)
+
+
+def fetch_unique_song_urls():
+    urls = load_dictionary_from_json_file('songs.json')
+
+    for i, url in enumerate(urls):
+        print("Processing {0} - {1}".format(i, url))
+        actual_url = get_actual_song_url(url)
+        append_row_to_file([url, actual_url], 'actual_songs.csv')
+
+
+
 
 discogs_base_url = 'https://www.discogs.com'
 countries = ['Serbia', 'Yugoslavia']
@@ -304,12 +383,11 @@ year_bounds = {
     countries[1]: [1927, 2019]
 }
 
-local_data_dir = 'local_data'
 
 if __name__ == '__main__':
     print("Starting...")
     print(datetime.datetime.now().time())
 
-    fetch_all_artist_data_from_file('artists.json')
+    merge_artist_data()
 
     print("Done")
