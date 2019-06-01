@@ -39,7 +39,7 @@ def extract_data_from_artist_html(metrics_html: str, title_html):
     while i< len(divs):
         div = divs[i]
         i+=1
-        if div['class'] == 'head' and div.text.strip() == "Sites:":
+        if div.text.strip() == "Sites:":
             break
 
     if i != len(divs):
