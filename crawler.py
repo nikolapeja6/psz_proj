@@ -278,7 +278,7 @@ def fetch_all_artist_data_from_file(filename: str):
 
     start_time = time.time()
 
-    for i, suffix in reversed(list(enumerate(url_sufix_list))):
+    for i, suffix in enumerate(url_sufix_list):
         url = "{0}/{1}".format(discogs_base_url, suffix)
         print("Processing {0}. - {1}".format(i, url))
         page = get_soup_with_html(url)
