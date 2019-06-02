@@ -9,6 +9,9 @@ You will also need the following python packages:
  - beautifulsoup4
  - fuzzywuzzy
  - python-Levenshtein 
-
+ - regex
+ - matplotlib
+ - numpy
+ - cyrtranslit
 
 [python3]: https://www.python.org/downloads/

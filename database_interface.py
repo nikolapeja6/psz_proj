@@ -16,6 +16,7 @@ sql_create_album_table_string = 'CREATE TABLE albums (' \
                             'y integer' \
                             ')'
 
+
 sql_create_artist_table_string = 'CREATE TABLE artists (' \
                                  'url text, ' \
                                  'arranged integer, ' \
@@ -32,12 +33,24 @@ sql_create_artist_table_string = 'CREATE TABLE artists (' \
                                  'vocals_cnt integer ' \
                                  ')'
 
+sql_create_song_table_string = 'CREATE TABLE songs (' \
+                               'album text, ' \
+                               'country text, ' \
+                               'duration integer, ' \
+                               'format text, ' \
+                               'genre text, ' \
+                               'name text, ' \
+                               'style text, ' \
+                               'url text, ' \
+                               'y integer ' \
+                               ')'
+
 sql_insert_album_string = "INSERT INTO albums VALUES (?,?,?,?,?,?,?,?,?)"
 
 
 sql_insert_artist_string = "INSERT INTO artists VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
-
+sql_insert_song_string = "INSERT INTO songs VALUES (?,?,?,?,?,?,?,?,?)"
 
 def create_tables_in_database():
     con = connect_to_database()
@@ -45,6 +58,7 @@ def create_tables_in_database():
 
     c.execute(sql_create_album_table_string)
     c.execute(sql_create_artist_table_string)
+    c.execute(sql_create_song_table_string)
 
     con.commit()
     con.close()
@@ -61,6 +75,19 @@ def insert_album_into_database(c, album:dict):
             album.get('versions', 0),
             album.get('year', 0)
              ])
+
+def insert_song_into_database(c, song: dict):
+    c.execute(sql_insert_song_string, [
+        song['album'],
+        song['country'],
+        song['duration'],
+        song['format'],
+        song['genre'],
+        song['name'],
+        song['style'],
+        song['url'],
+        song['year']
+    ])
 
 def row_to_album(row: tuple):
     album = {
@@ -100,6 +127,23 @@ def row_to_artist(row: tuple):
 
     return artist
 
+
+def row_to_song(row: tuple):
+    song = {
+        'album': row[0],
+        'country': row[1],
+        'duration': row[2],
+        'format': row[3],
+        'genre': row[4],
+        'name': row[5],
+        'style': row[6],
+        'url': row[7],
+        'year': row[8],
+    }
+
+    return song
+
+
 def fetch_all_albums_from_database():
     con = connect_to_database()
     c = con.cursor()
@@ -125,6 +169,20 @@ def fetch_all_artists_from_database():
     con.close()
 
     return artists
+
+
+def fetch_all_songs_from_database():
+    con = connect_to_database()
+    c = con.cursor()
+
+    songs = list()
+
+    for row in c.execute('SELECT * FROM songs'):
+        songs.append(row_to_song(row))
+
+    con.close()
+    return songs
+
 
 
 def insert_artist_into_database(c, url: str, artist:dict):
@@ -168,6 +226,18 @@ def insert_all_albums_into_database(filename: str):
     con.commit()
     con.close()
 
+def insert_all_songs_into_database(filename: str):
+    songs = load_dictionary_from_json_file(filename)
+    con = connect_to_database()
+    c = con.cursor()
+
+    for  song in songs:
+        insert_song_into_database(c, song)
+
+    con.commit()
+    con.close()
+
+
 
 def connect_to_database():
     return sqlite3.connect(os.path.join('data', 'psz_database.db'))
@@ -179,8 +249,10 @@ if __name__ == '__main__':
     #create_tables_in_database()
     #insert_all_albums_into_database('album_secondary_data.json')
     #insert_all_artists_into_database('updated_artist_secondary_data.json')
+    #insert_all_songs_into_database('songs_secondary_data.json')
 
     #print(fetch_all_albums_from_database())
-    print(fetch_all_artists_from_database())
+    #print(fetch_all_artists_from_database())
+    print(fetch_all_songs_from_database())
 
     print('Done')

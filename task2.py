@@ -1,5 +1,8 @@
 from database_interface import *
 import matplotlib
+from collections import Counter
+import cyrtranslit
+import task3
 
 def a():
     albums = fetch_all_albums_from_database()
@@ -62,6 +65,52 @@ def d():
 
     return ret
 
+
+def to_latin(string: str):
+    if task3.is_cyrillic(string):
+        return cyrtranslit.to_latin(string)
+    return string
+
+
+def e(top: int, generate_report=False):
+    songs = fetch_all_songs_from_database()
+
+    song_names = list()
+    for song in songs:
+        name = to_latin(song['name'])
+        song_names.append(name)
+
+    c = Counter(song_names)
+
+    counted_songs = c.most_common(top)
+
+    if generate_report:
+
+        res = list()
+        for counted_song in counted_songs:
+            cnt = counted_song[1]
+            name = counted_song[0]
+
+            lst = list()
+
+            for song in songs:
+                if to_latin(song['name']) == name:
+                    sng = {
+                        'format': song['format'],
+                        'country': song['country'],
+                        'year': song['year'],
+                        'genre': song['genre'],
+                        'style': song['style']
+                    }
+                    lst.append(sng)
+
+            res.append((cnt, name, lst))
+
+        save_dictionary_to_json_file('tast2_e.json', res)
+
+    return counted_songs
+
+
 def f():
     artists = fetch_all_artists_from_database()
 
@@ -78,4 +127,5 @@ if __name__ == '__main__':
     #print(b())
     #print(c())
     #print(d())
-    print(f())
+    print(e(100), False)
+    #print(f())
