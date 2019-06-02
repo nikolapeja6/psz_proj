@@ -10,16 +10,48 @@ def util_plot_pie(values: list, labels: list, colors=None):
     plt.axis('equal')
     plt.show()
 
+def merged_genres():
+    genres = task2.a()
+
+    i = 0
+    while i < len(genres):
+        if genres[i][0] in ['Folk', 'World', 'Country']:
+            folk_country_world = genres[i][1]
+            genres.pop(i)
+        else:
+            i += 1
+
+    i = 0
+    while i < len(genres):
+        if genres[i][0] in ['Brass', 'Military']:
+            brass_military = genres[i][1]
+            genres.pop(i)
+        else:
+            i += 1
+
+    i = 0
+    while i < len(genres):
+        if genres[i][0] in ['Stage', 'Screen']:
+            stage_screen = genres[i][1]
+            genres.pop(i)
+        else:
+            i += 1
+    genres.append(('Folk, Country & World', folk_country_world))
+    genres.append(('Brass & Military', brass_military))
+    genres.append(('Stage & Screen', stage_screen))
+    genres.sort(key=lambda x: x[1], reverse=True)
+
+    return genres
 
 def a(top: int):
-    genres = task2.a()
+    genres = merged_genres()
 
     values = list()
     labels = list()
 
     i = 0
-    while i <= top:
-        labels.append(genres[i][0])
+    while i < top:
+        labels.append("{0} ({1})".format(genres[i][0], genres[i][1]))
         values.append(genres[i][1])
         i += 1
 
@@ -27,10 +59,9 @@ def a(top: int):
     covered = sum(values)
 
     values.append(total - covered)
-    labels.append('Other')
+    labels.append('Other {0}'.format(total-covered))
 
     util_plot_pie(values, labels)
-
 
 def b():
     songs = fetch_all_songs_from_database()
@@ -61,6 +92,9 @@ def b():
 
         cnts[i] += 1
 
+    print(sum(cnts))
+    for i in range(len(labels)):
+        labels[i] = "{0} ({1})".format(labels[i], cnts[i])
     util_plot_pie(cnts, labels)
 
 def histogram_helper(data: list, begin: int=0, end: int=0, step: int=0, bins: list= None):
@@ -107,6 +141,7 @@ def d():
 
     util_plot_pie(values, labels, colors)
 
+# TODO check
 def e():
     albums = fetch_all_albums_from_database()
 
@@ -115,19 +150,29 @@ def e():
     colors = ['gold', 'yellowgreen', 'lightcoral', 'lightskyblue']
 
     for album in albums:
-        n = len(album['genre'].split('#'))
+        genres = list(filter(bool, album['genre'].split('#')))
+        n = len(genres)
+        if 'Folk' in album['genre']:
+            n-=2
+        if 'Brass' in album['genre']:
+            n-=1
+        if 'Stage' in album['genre']:
+            n-=1
+
 
         if n >= len(values):
-            n = -1
+            n = len(values)
 
-        values[n] += 1
+        values[n-1] += 1
 
+    for i in range(len(values)):
+        labels[i] += '({0})'.format(values[i])
     util_plot_pie(values, labels, colors)
 
 
 if __name__ == '__main__':
-    #a(6)
+    a(6)
     b()
-    #c()
-    #d()
-    #e()
+    c()
+    d()
+    e()
