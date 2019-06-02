@@ -30,26 +30,35 @@ def b():
 
     return sorted(styles.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
 
-def c():
+
+def c(top: int):
     albums = fetch_all_albums_from_database()
     sorted_albums = sorted(albums, key= lambda x: x['versions'], reverse=True)
 
     sorted_albums = [[album['title'], album['versions']] for album in sorted_albums]
 
-    ret = list()
+    ret1 = list()
     i = 0
     last = -1
-    while i < len(sorted_albums) and len(ret)< 20:
-        if len(ret) == 0 or sorted_albums[i][1] != last:
+    while i < len(sorted_albums) and len(ret1)< top:
+        if len(ret1) == 0 or sorted_albums[i][1] != last:
             last = sorted_albums[i][1]
-            ret.append([last, set([sorted_albums[i][0]])])
+            ret1.append([last, set([sorted_albums[i][0]])])
             i+=1
             continue
-        ret[-1][1].add(sorted_albums[i][0])
+        ret1[-1][1].add(sorted_albums[i][0])
         last = sorted_albums[i][1]
         i+=1
 
-    return ret
+    c = Counter([album['title'] for album in albums])
+    ret2 = c.most_common(top)
+
+    c = Counter(["{0}#{1}".format(album['title'], album['artist']) for album in albums])
+    ret3 = c.most_common(top)
+    ret3 = [[string.split('#')[0], num] for string, num in ret3]
+
+
+    return [ret1, ret2, ret3]
 
 def d():
     artists = fetch_all_artists_from_database()
@@ -100,7 +109,8 @@ def e(top: int, generate_report=False):
                         'country': song['country'],
                         'year': song['year'],
                         'genre': song['genre'],
-                        'style': song['style']
+                        'style': song['style'],
+                        'url': song['url']
                     }
                     lst.append(sng)
 
@@ -125,7 +135,11 @@ def f():
 if __name__ == '__main__':
     #print(a())
     #print(b())
-    #print(c())
+
+    print('C')
+    for item in c(20):
+        print(item)
     #print(d())
-    print(e(100), False)
+    # TODO check
+    #print(e(100, True))
     #print(f())
