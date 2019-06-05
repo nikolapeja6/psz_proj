@@ -13,5 +13,7 @@ You will also need the following python packages:
  - matplotlib
  - numpy
  - cyrtranslit
+ - scikit-learn
+ - bokeh
 
 [python3]: https://www.python.org/downloads/
