@@ -104,19 +104,10 @@ def albums_to_features(albums: list, features: list):
 col = ['blue', 'green', 'red',  'pink', 'black']
 
 
-def task4(num_of_clusters: int, features: list):
-    albums = fetch_all_albums_from_database()
-
-    albums_features = albums_to_features(albums, features)
-
-    kmeans = KMeans(n_clusters=num_of_clusters, random_state=0).fit(albums_features)
-
-    labels = list(kmeans.labels_)
-    pca = PCA(n_components=2).fit(albums_features)
-    pca_2d = pca.transform(albums_features)
-
+def visialize_ndoes(labels: list, pca_2d: list, num_of_clusters: int, features: list, albums: list, task_name: str,
+                    method: str):
     color_dic = dict()
-    for i in range(num_of_clusters):
+    for i in range(-1, num_of_clusters+1):
         color_dic[i] = random_color()
 
     cls = [color_dic[label] for label in labels]
@@ -140,12 +131,26 @@ def task4(num_of_clusters: int, features: list):
         TOOLTIPS.append((feature, "@{0}".format(feature)))
         source.add([album[feature] for album in albums], feature)
 
-    p = figure(sizing_mode='stretch_both', title="K-Means clustering of albums on metrics: "+", ".join(features),
+    p = figure(sizing_mode='stretch_both', title=method+" clustering of albums on metrics: "+", ".join(features),
                tooltips=TOOLTIPS)
 
     p.circle('x', 'y', source=source, color='color', fill_alpha=0.2, size=5)
-    output_file(get_local_data_path("task4_b.html"), title="PSZ | K-Means clustering of Albums")
+    output_file(get_local_data_path(task_name+".html"), title="PSZ | {0} clustering of Albums".format(method))
     show(p)
+
+def task4(num_of_clusters: int, features: list):
+    albums = fetch_all_albums_from_database()
+
+    albums_features = albums_to_features(albums, features)
+
+    kmeans = KMeans(n_clusters=num_of_clusters, random_state=0).fit(albums_features)
+
+    labels = list(kmeans.labels_)
+    pca = PCA(n_components=2).fit(albums_features)
+    pca_2d = pca.transform(albums_features)
+
+    visialize_ndoes(labels, pca_2d, num_of_clusters, features, albums, 'task4', 'K-Means')
+
 
 
 if __name__ == '__main__':
