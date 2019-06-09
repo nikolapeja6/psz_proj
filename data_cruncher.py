@@ -10,26 +10,27 @@ from fuzzywuzzy import fuzz
 def html_to_bs4(html: str):
     return BeautifulSoup(html, 'html.parser')
 
-def extract_data_from_artist_html(metrics_html: str, title_html):
+def extract_data_from_artist_html(metrics_html: str, title_html: str):
     page = html_to_bs4(metrics_html)
 
-    ul = page.find('ul', attrs={'class': 'facets_nav'})
-
-    links = ul.find_all('a')
+    uls = page.find_all('ul', attrs={'class': 'facets_nav'})
 
     ret = dict()
 
-    for link in links:
-        text = link.text.strip()
-        words = text.split()
+    for ul in uls:
+        links = ul.find_all('a')
 
-        value = words[0]
-        label = " ".join(words[1:])
-        label = label.lower()
+        for link in links:
+            text = link.text.strip()
+            words = text.split()
 
-        #print("{0}={1}".format(label, value))
+            value = words[0]
+            label = " ".join(words[1:])
+            label = label.lower()
 
-        ret[label] = value
+            #print("{0}={1}".format(label, value))
+
+            ret[label] = value
 
     page = html_to_bs4(title_html)
 
@@ -533,8 +534,6 @@ if __name__ == '__main__':
     print(datetime.datetime.now().time())
 
     #extract_data_from_artists('artist_data.json')
-    #extract_data_from_albums('albums.json')
-
     #extract_data_from_albums('albums.json')
 
     count_credits_from_artists()
