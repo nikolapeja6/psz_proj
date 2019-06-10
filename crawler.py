@@ -7,28 +7,37 @@ import csv
 import datetime
 import json
 from util import *
+import urllib
+
 
 def get_soup_with_html(url: str):
 
-    #last_sleep = 1
+    html_response = get_html_from_url(url)
+
+    if html_response:
+        return BeautifulSoup(html_response, 'html.parser')
+
+    return None
+
+
+def get_html_from_url(url: str):
+
     while True:
 
         try:
             response = requests.get(url, headers={'User-agent': 'bot'})
-            #time.sleep(0.5)
+            # time.sleep(0.5)
 
             if response:
-                return BeautifulSoup(response.content, 'html.parser')
+                return response.text
             else:
                 print("Blocked - {0}".format(response.status_code))
                 if response.status_code == 404:
                     append_list_to_file([url], 'TODO_404.csv')
                     return None
                 time.sleep(60)
-                #if last_sleep < 60:
-                #    last_sleep*=2
         except:
-            time.sleep(60*5)
+            time.sleep(60 * 5)
 
 
 def get_number_of_pages(url: str):
@@ -130,12 +139,22 @@ def extract_artists_from_title(page: BeautifulSoup):
     title = page.find('h1', id='profile_title')
     artists = title.find_all('a')
 
-    return [artist['href'] for artist in  artists]
+    return [artist['href'] for artist in artists]
 
 def extract_artists_from_credits(page: BeautifulSoup):
     artists = page.find_all('a')
 
     return [artist['href'] for artist in artists]
+
+def extract_artists_from_tracklist(page: BeautifulSoup):
+    all_a = page.find_all('a')
+
+    ret = set()
+    for a in all_a:
+        if 'artist/' in a['href']:
+            ret.add(a['href'])
+
+    return list(ret)
 
 
 def extract_relevant_html_from_album_page(page: BeautifulSoup, url: str, i: int):
@@ -158,8 +177,6 @@ def extract_relevant_html_from_album_page(page: BeautifulSoup, url: str, i: int)
     save_dictionary_to_json_file(filename, data)
 
     return [title, tracklist, credits, versions]
-
-
 
 
 def append_list_to_file(lst: list, filename: str):
@@ -246,9 +263,11 @@ def extract_artists_from_album_data():
         for album in albums:
             title_soup = BeautifulSoup(album['title'], 'html.parser')
             credits_soup = BeautifulSoup(album['credits'], 'html.parser')
+            tracklist_soup = BeautifulSoup(album['tracklist'], 'html.parser')
 
             artists.update(extract_artists_from_title(title_soup))
             artists.update(extract_artists_from_credits(credits_soup))
+            artists.update(extract_artists_from_tracklist(tracklist_soup))
 
     save_dictionary_to_json_file('artists.json', list(artists))
 
@@ -374,7 +393,54 @@ def fetch_unique_song_urls():
         append_row_to_file([url, actual_url], 'actual_songs.csv')
 
 
+def download_html_pages_from_list(urls: list, folder: str, filename_sufix: str=""):
+    for i, url in enumerate(urls):
+        print(i)
+        print(url)
+        html = get_html_from_url(url)
+        if html is None:
+            continue
+        html += '\n<!-- {0} -->'.format(url)
 
+        filename = url[8:].replace('/', '#')
+        filename = filename.replace('?', '@')
+        filename = '{0}.html'.format(filename)
+
+        if filename_sufix != '':
+            filename = "{0}-{1}".format(filename_sufix, filename)
+
+        filename = os.path.join(folder, filename)
+        print(filename)
+
+        with open(filename, 'w', encoding='utf-8') as file:
+            file.write(html)
+
+def extract_list_of_artists_from_discog_dataset():
+    folder = get_discogs_dataset_path('albums')
+
+    artists = set()
+
+    for i, file in enumerate(os.listdir(folder)):
+        print(i)
+
+        with open(os.path.join(folder, file), 'r', encoding='utf-8') as f:
+            text = f.readlines()
+        text = "".join(text)
+        soup = BeautifulSoup(text, 'html.parser')
+
+        all_a = soup.find_all('a')
+
+        for a in all_a:
+            href = a.get('href', "")
+            if href.startswith('/artist/'):
+                artists.add(href)
+
+    append_list_to_file(list(artists), 'discogs_dataset_artists.csv')
+
+
+def get_discogs_dataset_path(filename: str):
+    path = os.path.join('discogs_dataset', filename)
+    return get_local_data_path(path)
 
 discogs_base_url = 'https://www.discogs.com'
 countries = ['Serbia', 'Yugoslavia']
@@ -388,6 +454,17 @@ if __name__ == '__main__':
     print("Starting...")
     print(datetime.datetime.now().time())
 
-    merge_artist_data()
+    #merge_artist_data()
+
+
+    with open(get_discogs_dataset_path('artists.csv'), encoding='utf-8') as file:
+        urls = file.readlines()
+    urls = [discogs_base_url + url.strip() for url in urls]
+    urls = [urllib.parse.unquote(url) for url in urls]
+
+    download_html_pages_from_list(urls, get_discogs_dataset_path('artists'), '')
+
+
+    #extract_list_of_artists_from_discog_dataset()
 
     print("Done")
