@@ -8,6 +8,12 @@ import datetime
 import json
 from util import *
 import urllib
+from database_interface import *
+from ProxyRequests import ProxyRequests
+import threading
+import sqlite3
+from data_cruncher import *
+
 
 
 def get_soup_with_html(url: str):
@@ -25,18 +31,28 @@ def get_html_from_url(url: str):
     while True:
 
         try:
-            response = requests.get(url, headers={'User-agent': 'bot'})
+            #response1 = requests.get(url, headers={'User-agent': 'bot'})
+            #print(response1.text.strip())
+            r = ProxyRequests(url)
+            r.set_headers({"User-Agent": "bot"})
+            r.get()
+            response = str(r)
+            status_code = r.status_code
+            #print(r.get_proxy_used())
+
             # time.sleep(0.5)
 
             if response:
-                return response.text
+                print('*', end='')
+                return response
             else:
-                print("Blocked - {0}".format(response.status_code))
-                if response.status_code == 404:
+                print("Blocked - {0}".format(status_code))
+                if status_code == 404:
                     append_list_to_file([url], 'TODO_404.csv')
                     return None
                 time.sleep(60)
-        except:
+        except Exception as e:
+            print(e)
             time.sleep(60 * 5)
 
 
@@ -349,49 +365,6 @@ def extract_songs_from_albums():
 
     save_dictionary_to_json_file('songs.json', ret)
 
-proxy_index: int = 0
-proxies = [
-    "156.239.15.203:6604",
-    "194.8.146.167:31654",
-    "188.128.56.93:8080",
-    "217.182.120.165:1080",
-    "101.109.245.154:32820",
-    "114.6.131.141:34758",
-    "78.60.130.181:32596",
-    "131.108.166.3:80",
-    "61.247.178.218:50691",
-    "95.31.22.157:51804"
-]
-
-def get_actual_song_url(url: str):
-    url = "{0}/{1}".format(discogs_base_url, url)
-
-    try:
-        response = requests.get(url, headers={'User-agent': 'bot'})
-        # time.sleep(0.5)
-
-        if response:
-            return response.url
-        else:
-            print("Blocked - {0}".format(response.status_code))
-            if response.status_code == 404:
-                append_list_to_file([url], 'TODO_404.csv')
-                return None
-            time.sleep(60)
-            # if last_sleep < 60:
-            #    last_sleep*=2
-    except:
-        time.sleep(60 * 5)
-
-
-def fetch_unique_song_urls():
-    urls = load_dictionary_from_json_file('songs.json')
-
-    for i, url in enumerate(urls):
-        print("Processing {0} - {1}".format(i, url))
-        actual_url = get_actual_song_url(url)
-        append_row_to_file([url, actual_url], 'actual_songs.csv')
-
 
 def download_html_pages_from_list(urls: list, folder: str, filename_sufix: str=""):
     for i, url in enumerate(urls):
@@ -449,6 +422,104 @@ year_bounds = {
     countries[1]: [1927, 2019]
 }
 
+song_urls = [song['url'] for song in fetch_all_songs_from_database()]
+song_len = len(song_urls)
+
+
+def connect_to_songs():
+    return sqlite3.connect('E:\songs_database.db')
+
+
+def clrean_artist_url(url:str):
+    if url.endswith('/tracks'):
+        url = url[0:-7]
+
+    return url
+
+def extract_artists_from_song(song_html: str):
+    page = html_to_bs4(song_html)
+
+    arranged = list()
+    all_credits = set()
+    vocals = list()
+    music = list()
+    lyrics = list()
+
+    credits = page.find('div', attrs={'class':  'TrackCredits'})
+
+    all_a = credits.find_all('a')
+    for a in all_a:
+        url = a['href']
+        if url is not None and url != "" and 'artist/' in url:
+            url = clrean_artist_url(url)
+            all_credits.add(url)
+
+    facts = credits.find_all('div', attrs={'class':  'TrackFact'})
+
+    for fact in facts:
+        text = fact.text.lower()
+
+        if 'arranged' in text:
+            all_a = fact.find_all('a')
+            for a in all_a:
+                url = a['href']
+                if url is not None and url != "" and 'artist/' in url:
+                    url = clrean_artist_url(url)
+                    arranged.append(url)
+
+        if 'lyrics' in text:
+            all_a = fact.find_all('a')
+            for a in all_a:
+                url = a['href']
+                if url is not None and url != "" and 'artist/' in url:
+                    url = clrean_artist_url(url)
+                    lyrics.append(url)
+
+        if 'vocal' in text:
+            all_a = fact.find_all('a')
+            for a in all_a:
+                url = a['href']
+                if url is not None and url != "" and 'artist/' in url:
+                    url = clrean_artist_url(url)
+                    vocals.append(url)
+
+        if 'music' in text:
+            all_a = fact.find_all('a')
+            for a in all_a:
+                url = a['href']
+                if url is not None and url != "" and 'artist/' in url:
+                    url = clrean_artist_url(url)
+                    music.append(url)
+
+
+    return {
+        'credits': list(all_credits),
+        'arranged': arranged,
+        'lyrics': lyrics,
+        'music': music,
+        'vocals': vocals,
+    }
+
+
+def worker(k: int, n: int):
+    print('worker {0}'.format(k))
+
+    i = k
+    while i < song_urls:
+
+        i += n
+
+
+
+def execute_sql_on_song_db(sql_str: str):
+    con = connect_to_database()
+    c = con.cursor()
+
+    c.execute(sql_str)
+
+    con.commit()
+    con.close()
+
 
 if __name__ == '__main__':
     print("Starting...")
@@ -456,14 +527,30 @@ if __name__ == '__main__':
 
     #merge_artist_data()
 
-
+    '''
     with open(get_discogs_dataset_path('artists.csv'), encoding='utf-8') as file:
         urls = file.readlines()
     urls = [discogs_base_url + url.strip() for url in urls]
     urls = [urllib.parse.unquote(url) for url in urls]
 
     download_html_pages_from_list(urls, get_discogs_dataset_path('artists'), '')
+    '''
 
+    print('a')
+
+    #print(clrean_artist_url('https://www.discogs.com/artist/2218878-Achilleas-Oikonomou/tracks'))
+    print(extract_artists_from_song(get_html_from_url('https://www.discogs.com/composition/45ab210a-1caf-4a80-8c76-e0f0123ddc5d-Poku%C5%A1aj')))
+
+    exit(0)
+
+    for i, artist in enumerate(artists):
+        #print(i)
+        if i % 100 == 0:
+            print(i)
+        url = artist['url']
+        #get_html_from_url(url)
+        thread1 = threading.Thread(target=get_html_from_url, args=([url]))
+        thread1.start()
 
     #extract_list_of_artists_from_discog_dataset()
 

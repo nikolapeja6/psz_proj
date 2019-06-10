@@ -15,5 +15,7 @@ You will also need the following python packages:
  - cyrtranslit
  - scikit-learn
  - bokeh
+ - x requests\[socks\]
+ - x requests\[security\]
 
 [python3]: https://www.python.org/downloads/
