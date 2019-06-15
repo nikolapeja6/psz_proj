@@ -6,6 +6,7 @@ import re
 import crawler
 from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
+import collections
 
 def html_to_bs4(html: str):
     return BeautifulSoup(html, 'html.parser')
@@ -468,6 +469,77 @@ def count_credits_from_artists():
     save_dictionary_to_json_file('updated_artist_secondary_data.json', artists_secondary)
 
 
+metrics = ['vocal', 'arranged','lyrics','music']
+
+
+def extract_credits_from_tracklist_updated(tracklist_html: str):
+    tracklist = html_to_bs4(tracklist_html)
+
+    data = {
+        'credits': []
+    }
+    for metric in metrics:
+        data[metric] = []
+
+
+    artists = tracklist.find_all('span', attrs={'class': 'tracklist_extra_artist_span'})
+
+    if artists == None or len(artists) == 0:
+        return data
+
+    for artist in artists:
+        text = artist.text.lower()
+
+        all_a = artist.find_all('a')
+        if all_a == None or len(all_a) == 0:
+            continue
+
+        urls = [a['href'] for a in all_a]
+
+        # Credits
+        data['credits'].extend(urls)
+
+        for metric in metrics:
+            if metric in text:
+                data[metric].extend(urls)
+
+    return data
+
+def updated_count_credits():
+    album_data = load_dictionary_from_json_file('albums.json')
+
+    data = {
+        'credits': [],
+    }
+
+    for metric in metrics:
+        data[metric] = []
+
+    for country, albums in album_data.items():
+        print(country)
+
+        for i, album in enumerate(albums):
+            print(i)
+            tracklist_html = album['tracklist']
+            credits = extract_credits_from_tracklist_updated(tracklist_html)
+            data['credits'].extend(credits['credits'])
+            for metric in metrics:
+                data[metric].extend(credits[metric])
+
+
+
+
+    m = ['credits']
+    m.extend(metrics)
+
+    for metric in m:
+        data[metric] = collections.Counter(data[metric]).most_common()
+        print('{0}: {1}'.format(metric, len(data[metric])))
+        print(data[metric])
+
+    save_dictionary_to_json_file('updated_artist_metrics---songs---.json', data)
+
+
 def update_and_merge_songs(song_dst: dict, song: dict):
     song_dst['album'] = song_dst['album']+1
 
@@ -536,7 +608,9 @@ if __name__ == '__main__':
     #extract_data_from_artists('artist_data.json')
     #extract_data_from_albums('albums.json')
 
-    count_credits_from_artists()
+    #count_credits_from_artists()
+
+    updated_count_credits()
 
     #merge_songs(91)
 

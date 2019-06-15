@@ -3,6 +3,8 @@ import sqlite3
 import os
 from util import *
 import json
+import data_cruncher
+from crawler import discogs_base_url
 
 sql_create_album_table_string = 'CREATE TABLE albums (' \
                             'url text, ' \
@@ -120,10 +122,19 @@ def row_to_artist(row: tuple):
         'sites': row[10],
         'vocals': row[11],
         'vocals_cnt': row[12],
+        'credits_songs': row[13],
+        'vocal_songs': row[14],
+        'arranged_songs': row[15],
+        'lyrics_songs': row[16],
+        'music_songs': row[17],
     }
 
     if artist['sites'] != None:
         artist['sites'] = json.loads(row[10])
+
+    for key in artist.keys():
+        if artist[key] is None and key not in ['name', 'sites']:
+            artist[key] = 0
 
     return artist
 
@@ -238,6 +249,38 @@ def insert_all_songs_into_database(filename: str):
     con.close()
 
 
+def update_database_with_new_metrics(create_new_columns: bool = False):
+
+    if create_new_columns:
+        con = connect_to_database()
+        c = con.cursor()
+
+        m = ['credits_songs']
+        for metric in data_cruncher.metrics:
+            m.append("{0}_songs".format(metric))
+
+        for column_name in m:
+            c.execute('ALTER TABLE artists ADD COLUMN {0} INTEGER;'.format(column_name))
+
+        con.commit()
+        con.close()
+
+    data = load_dictionary_from_json_file('updated_artist_metrics---songs---.json')
+
+    con = connect_to_database()
+    c = con.cursor()
+    for metric, data_list in data.items():
+        col_name = "{0}_songs".format(metric)
+        for url, cnt in data_list:
+            url = "{0}/{1}".format(discogs_base_url, url)
+            in_database = list(c.execute("SELECT COUNT(*) FROM artists WHERE url='{0}'".format(url)))[0][0]
+            if in_database == 0:
+                c.execute("INSERT INTO artists (url, {0}) VALUES ('{1}', {2})".format(col_name, url, cnt))
+            else:
+                c.execute("UPDATE artists SET {0}={1} WHERE url='{2}'".format(col_name, cnt, url))
+    con.commit()
+    con.close()
+
 
 def connect_to_database():
     return sqlite3.connect(os.path.join('data', 'psz_database.db'))
@@ -246,6 +289,8 @@ if __name__ == '__main__':
     print('Starting...')
     print(datetime.datetime.now().time())
 
+    update_database_with_new_metrics()
+
     #create_tables_in_database()
     #insert_all_albums_into_database('album_secondary_data.json')
     #insert_all_artists_into_database('updated_artist_secondary_data.json')
@@ -253,6 +298,6 @@ if __name__ == '__main__':
 
     #print(fetch_all_albums_from_database())
     #print(fetch_all_artists_from_database())
-    print(fetch_all_songs_from_database())
+    #print(fetch_all_songs_from_database())
 
     print('Done')

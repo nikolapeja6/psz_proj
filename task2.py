@@ -65,8 +65,11 @@ def d():
 
     ret = dict()
 
-    for metric in ['credits', 'credits_cnt', 'vocals', 'vocals_cnt', 'arranged', 'arranged_cnt',
-                   'lyrics', 'lyrics_cnt', 'music', 'music_cnt']:
+    for metric in ['credits', 'credits_cnt', 'credits_songs',
+                   'vocals', 'vocals_cnt', 'vocal_songs',
+                   'arranged', 'arranged_cnt', 'arranged_songs',
+                   'lyrics', 'lyrics_cnt', 'lyrics_songs',
+                   'music', 'music_cnt', 'music_songs']:
         res = sorted(artists, key=lambda x: x[metric], reverse=True)[0:100]
         res = [[x[metric], x['name']] for x in res]
 
@@ -136,10 +139,10 @@ if __name__ == '__main__':
     #print(a())
     #print(b())
 
-    print('C')
-    for item in c(20):
-        print(item)
-    #print(d())
+    #print('C')
+    #for item in c(20):
+        #print(item)
+    print(d())
     # TODO check
     #print(e(100, True))
     #print(f())
