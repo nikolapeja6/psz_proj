@@ -132,7 +132,7 @@ def visialize_ndoes(labels: list, pca_2d: list, num_of_clusters: int, features: 
         source.add([album[feature] for album in albums], feature)
 
     p = figure(sizing_mode='stretch_both', title=method+" clustering of albums on metrics: "+", ".join(features),
-               tooltips=TOOLTIPS)
+               tooltips=TOOLTIPS, output_backend='webgl')
 
     p.circle('x', 'y', source=source, color='color', fill_alpha=0.2, size=5)
     output_file(get_local_data_path(task_name+".html"), title="PSZ | {0} clustering of Albums".format(method))
