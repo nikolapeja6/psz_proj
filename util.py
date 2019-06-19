@@ -9,7 +9,6 @@ def save_dictionary_to_json_file(file_name: str, data):
         json.dump(data, fp, indent=4, sort_keys=True)
 
 
-
 def load_dictionary_from_json_file(filename: str):
     with open(get_local_data_path(filename)) as file:
         ret = json.load(file)
@@ -23,9 +22,11 @@ def append_row_to_file(lst: list, filename: str):
         csv_writer.writerow(lst)
     file.close()
 
+
 def check_and_create_local_data_dir():
     if not os.path.exists(local_data_dir):
         os.makedirs(local_data_dir)
+
 
 def get_local_data_path(filename: str):
     check_and_create_local_data_dir()

@@ -1,6 +1,5 @@
 import datetime
 import sqlite3
-import os
 from util import *
 import json
 import data_cruncher
@@ -54,6 +53,7 @@ sql_insert_artist_string = "INSERT INTO artists VALUES (?,?,?,?,?,?,?,?,?,?,?,?,
 
 sql_insert_song_string = "INSERT INTO songs VALUES (?,?,?,?,?,?,?,?,?)"
 
+
 def create_tables_in_database():
     con = connect_to_database()
     c = con.cursor()
@@ -64,6 +64,7 @@ def create_tables_in_database():
 
     con.commit()
     con.close()
+
 
 def insert_album_into_database(c, album:dict):
     c.execute(sql_insert_album_string,[
@@ -78,6 +79,7 @@ def insert_album_into_database(c, album:dict):
             album.get('year', 0)
              ])
 
+
 def insert_song_into_database(c, song: dict):
     c.execute(sql_insert_song_string, [
         song['album'],
@@ -90,6 +92,7 @@ def insert_song_into_database(c, song: dict):
         song['url'],
         song['year']
     ])
+
 
 def row_to_album(row: tuple):
     album = {
@@ -129,7 +132,7 @@ def row_to_artist(row: tuple):
         'music_songs': row[17],
     }
 
-    if artist['sites'] != None:
+    if artist['sites'] is not None:
         artist['sites'] = json.loads(row[10])
 
     for key in artist.keys():
@@ -195,7 +198,6 @@ def fetch_all_songs_from_database():
     return songs
 
 
-
 def insert_artist_into_database(c, url: str, artist:dict):
     c.execute(sql_insert_artist_string,[
               url,
@@ -236,6 +238,7 @@ def insert_all_albums_into_database(filename: str):
 
     con.commit()
     con.close()
+
 
 def insert_all_songs_into_database(filename: str):
     songs = load_dictionary_from_json_file(filename)
@@ -284,6 +287,7 @@ def update_database_with_new_metrics(create_new_columns: bool = False):
 
 def connect_to_database():
     return sqlite3.connect(os.path.join('data', 'psz_database.db'))
+
 
 if __name__ == '__main__':
     print('Starting...')

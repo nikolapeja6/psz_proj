@@ -17,7 +17,7 @@ You will also need the following python packages:
  - bokeh
 
 
-## Scraping data from the pages
+### Scraping 
 
 The data on the pages can be structured differently, which caused me some difficulties when I tried to scrape it.
 Below are some examples of the pages with different structures.
@@ -34,8 +34,8 @@ Below are some examples of the pages with different structures.
    - [artist with aliases, sites and metrics](https://www.discogs.com/artist/59792-Bob-Dylan)
    - [artist with no sites, some mestrics](https://www.discogs.com/artist/2984842-Dragi-Domi%C4%87)
  - Songs
-   - [album with no credits for song](https://www.discogs.com//Radioaktivni-Radioaktivni/release/4009346) => [song with credits](https://www.discogs.com/composition/2bf9dd96-7837-415f-9318-495cee3d9fe4-Ne-Pri%C4%8Daj)
-   - [album with some credits for song](https://www.discogs.com//Various-Radio-Utopia-4-Belgrade-Coffee-Shop/release/142792) => [song with different credits](https://www.discogs.com/composition/0604c137-ac24-4f15-9d4b-61b551912a93-Svitac)
-   - [album with credits for songs](https://www.discogs.com/To%C5%A1e-Proeski-Secret-Place/release/12749465) => [sogn with no credits](https://www.discogs.com/composition/c61866a0-b099-4d84-9a78-399a68ef4844-Light-The-Flame)
+   - [album with no credits for song](https://www.discogs.com//Radioaktivni-Radioaktivni/release/4009346) → [song with credits](https://www.discogs.com/composition/2bf9dd96-7837-415f-9318-495cee3d9fe4-Ne-Pri%C4%8Daj)
+   - [album with some credits for song](https://www.discogs.com//Various-Radio-Utopia-4-Belgrade-Coffee-Shop/release/142792) → [song with different credits](https://www.discogs.com/composition/0604c137-ac24-4f15-9d4b-61b551912a93-Svitac)
+   - [album with credits for songs](https://www.discogs.com/To%C5%A1e-Proeski-Secret-Place/release/12749465) → [sogn with no credits](https://www.discogs.com/composition/c61866a0-b099-4d84-9a78-399a68ef4844-Light-The-Flame)
 
 [python3]: https://www.python.org/downloads/

@@ -1,15 +1,15 @@
 import datetime
-import time
 from bs4 import BeautifulSoup
 from util import *
 import re
 import crawler
-from fuzzywuzzy import process
 from fuzzywuzzy import fuzz
 import collections
 
+
 def html_to_bs4(html: str):
     return BeautifulSoup(html, 'html.parser')
+
 
 def extract_data_from_artist_html(metrics_html: str, title_html: str):
     page = html_to_bs4(metrics_html)
@@ -28,8 +28,6 @@ def extract_data_from_artist_html(metrics_html: str, title_html: str):
             value = words[0]
             label = " ".join(words[1:])
             label = label.lower()
-
-            #print("{0}={1}".format(label, value))
 
             ret[label] = value
 
@@ -55,6 +53,7 @@ def extract_data_from_artist_html(metrics_html: str, title_html: str):
     ret['name'] = name
 
     return ret
+
 
 def extract_data_from_artists(filename: str):
     artists = load_dictionary_from_json_file(filename)
@@ -100,6 +99,7 @@ def extract_data_from_artists(filename: str):
 
     return artists_secondary
 
+
 def transform_duration_string(duration_str: str):
     if duration_str == None or duration_str == "":
         return 0
@@ -113,6 +113,7 @@ def transform_duration_string(duration_str: str):
         return numbers[0]
 
     return int(numbers[0])*60 + int(numbers[1])
+
 
 def get_name_and_url_from_tr_soup(tr: BeautifulSoup):
     tds = tr.find_all('td', attrs={'class': 'tracklist_track_title'})
@@ -159,6 +160,7 @@ def extract_songs_data_from_tracklist_html(tracklist_html: str):
 
     return songs
 
+
 formats = [
     'Vinyl',
     'Disc',
@@ -190,6 +192,7 @@ formats = [
     'Reel-To-Reel'
 ]
 
+
 def remove_multiple_consecutive_blank_lines(string: str):
     string = re.sub('\n', ' ', string)
     string = re.sub('\t', ' ', string)
@@ -202,6 +205,7 @@ def reformat_genres_and_styles(data: str):
     data = [d.strip() for d in data]
     data = list(filter(None, data))
     return '#'.join(data)
+
 
 def extract_formats_from_format(format: str):
     ret = list()
@@ -228,7 +232,7 @@ def extract_data_from_album_title_html(title_html: str):
 
     divs = page.find('div', attrs={'class': 'profile'}).find_all('div')
 
-    if divs == None or len(divs) == 0:
+    if divs is None or len(divs) == 0:
         return data
 
     i = 0
@@ -258,9 +262,10 @@ def extract_data_from_album_title_html(title_html: str):
 
     return data
 
+
 def extract_number_of_album_versions(versions_html: str):
 
-    if versions_html == None or versions_html == "" or versions_html == "None":
+    if versions_html is None or versions_html == "" or versions_html == "None":
         return 1
 
     page = html_to_bs4(versions_html)
@@ -287,14 +292,14 @@ def extract_credits_from_tracklist_html(tracklist_html: str):
         'credits': []
     }
 
-    if tracklist_html == None or tracklist_html == "" or tracklist_html == "None":
+    if tracklist_html is None or tracklist_html == "" or tracklist_html == "None":
         return ret
 
     page = html_to_bs4(tracklist_html)
 
     artists = page.find_all('li', attrs={'class': 'tracklist_extra_artist_span'})
 
-    if artists == None or len(artists) == 0:
+    if artists is None or len(artists) == 0:
         return ret
 
     for artist in artists:
@@ -329,7 +334,6 @@ def extract_credits_from_tracklist_html(tracklist_html: str):
     return ret
 
 
-
 # TODO - artists with no URL
 def extract_credits_from_credits_html(credits_html: str):
     ret = {
@@ -340,7 +344,7 @@ def extract_credits_from_credits_html(credits_html: str):
         'credits': []
     }
 
-    if credits_html == None or credits_html == "" or credits_html == "None":
+    if credits_html is None or credits_html == "" or credits_html == "None":
         return ret
 
     page = html_to_bs4(credits_html)
@@ -355,7 +359,7 @@ def extract_credits_from_credits_html(credits_html: str):
 
         urls = artist.find_all('a')
 
-        if urls == None or len(urls) == 0:
+        if urls is None or len(urls) == 0:
             continue
 
         urls = [url['href'] for url in urls]
@@ -380,6 +384,7 @@ def extract_credits_from_credits_html(credits_html: str):
     ret['credits'] = list(set(ret['credits']))
 
     return ret
+
 
 def merge_two_credits(credits1: dict, credits2: dict):
     ret = {
@@ -414,6 +419,7 @@ def extract_credits_from_album_html(album: dict):
     credits_credits = extract_credits_from_credits_html(credits_html)
 
     return merge_two_credits(tracklist_credits, credits_credits)
+
 
 def extract_data_from_single_album_html(album: dict):
     tracklist_html = album['tracklist']
@@ -505,6 +511,7 @@ def extract_credits_from_tracklist_updated(tracklist_html: str):
 
     return data
 
+
 def updated_count_credits():
     album_data = load_dictionary_from_json_file('albums.json')
 
@@ -525,9 +532,6 @@ def updated_count_credits():
             data['credits'].extend(credits['credits'])
             for metric in metrics:
                 data[metric].extend(credits[metric])
-
-
-
 
     m = ['credits']
     m.extend(metrics)

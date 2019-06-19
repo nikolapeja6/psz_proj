@@ -1,8 +1,8 @@
 from database_interface import *
-import matplotlib
 from collections import Counter
 import cyrtranslit
 import task3
+
 
 def a():
     albums = fetch_all_albums_from_database()
@@ -16,6 +16,7 @@ def a():
             genres[genre] = genres.get(genre, 0) + 1
 
     return sorted(genres.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
+
 
 def b():
     albums = fetch_all_albums_from_database()
@@ -57,8 +58,8 @@ def c(top: int):
     ret3 = c.most_common(top)
     ret3 = [[string.split('#')[0], num] for string, num in ret3]
 
-
     return [ret1, ret2, ret3]
+
 
 def d():
     artists = fetch_all_artists_from_database()
@@ -134,6 +135,7 @@ def f():
             ret.append([artist['name'], ", ".join(artist['sites'])])
 
     return ret
+
 
 if __name__ == '__main__':
     #print(a())

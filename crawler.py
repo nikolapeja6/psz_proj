@@ -2,11 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 import math
 import time
-import os
-import csv
 import datetime
-import json
 from util import *
+
 
 def get_soup_with_html(url: str):
 
@@ -46,6 +44,7 @@ def get_number_of_pages(url: str):
 
     return number_of_pages
 
+
 def get_albums_from_page(url: str):
     print('Getting albums from page "{0}" ...'.format(url))
 
@@ -61,12 +60,15 @@ def get_albums_from_page(url: str):
 def url_search_country(country: str):
     return '{0}/search?limit=250&country_exact={1}'.format(discogs_base_url, country)
 
+
 def url_search_year(base_url: str, year: int):
     return '{0}&year={1}'.format(base_url, year)
+
 
 # Example: https://www.discogs.com/search/?limit=250&country_exact=Serbia&page=10
 def url_search_page(base_url: str, page_num: int):
     return '{0}&page={1}'.format(base_url, page_num)
+
 
 def get_all_albums_from_country(country: str):
 
@@ -98,10 +100,10 @@ def get_all_albums_from_country(country: str):
 
     return ret
 
+
 def get_albums_per_country():
     for country in countries:
         get_all_albums_from_country(country)
-
 
 
 def extract_title(page: BeautifulSoup):
@@ -109,10 +111,12 @@ def extract_title(page: BeautifulSoup):
 
     return str(ret)
 
+
 def extract_tracklist(page: BeautifulSoup):
     ret = page.find('div', id='tracklist')
 
     return str(ret)
+
 
 def extract_credits(page: BeautifulSoup):
     ret = page.find('div', id='credits')
@@ -131,6 +135,7 @@ def extract_artists_from_title(page: BeautifulSoup):
     artists = title.find_all('a')
 
     return [artist['href'] for artist in  artists]
+
 
 def extract_artists_from_credits(page: BeautifulSoup):
     artists = page.find_all('a')
@@ -160,13 +165,12 @@ def extract_relevant_html_from_album_page(page: BeautifulSoup, url: str, i: int)
     return [title, tracklist, credits, versions]
 
 
-
-
 def append_list_to_file(lst: list, filename: str):
     with open(get_local_data_path(filename), 'a', encoding='utf-8') as f:
         for item in lst:
             f.write("%s\n" % item)
     f.close()
+
 
 def read_all_lines_from_file(filename: str):
     with open(get_local_data_path(filename)) as f:
@@ -219,6 +223,7 @@ def merge_album_data(countries: list):
 
     save_dictionary_to_json_file('albums.json', all_data)
 
+
 def merge_artist_data():
     all_data = list()
 
@@ -233,6 +238,7 @@ def merge_artist_data():
     print('Saving...')
 
     save_dictionary_to_json_file('artist_data.json', all_data)
+
 
 def extract_artists_from_album_data():
     album_data = load_dictionary_from_json_file('albums.json')
@@ -257,6 +263,7 @@ def extract_artist_data_from_page(page: BeautifulSoup):
     ret = page.find('div', attrs={'class': 'discography_nav'})
 
     return str(ret)
+
 
 def extract_html_from_artist_page(page: BeautifulSoup, url: str, i: int):
     title = extract_title(page)
@@ -289,6 +296,7 @@ def fetch_all_artist_data_from_file(filename: str):
     end_time = time.time()
 
     print("Executed in {0}s".format(end_time-start_time))
+
 
 def extract_songs_from_tracklist(page: BeautifulSoup):
     table = page.find('table')
@@ -330,19 +338,6 @@ def extract_songs_from_albums():
 
     save_dictionary_to_json_file('songs.json', ret)
 
-proxy_index: int = 0
-proxies = [
-    "156.239.15.203:6604",
-    "194.8.146.167:31654",
-    "188.128.56.93:8080",
-    "217.182.120.165:1080",
-    "101.109.245.154:32820",
-    "114.6.131.141:34758",
-    "78.60.130.181:32596",
-    "131.108.166.3:80",
-    "61.247.178.218:50691",
-    "95.31.22.157:51804"
-]
 
 def get_actual_song_url(url: str):
     url = "{0}/{1}".format(discogs_base_url, url)
@@ -372,8 +367,6 @@ def fetch_unique_song_urls():
         print("Processing {0} - {1}".format(i, url))
         actual_url = get_actual_song_url(url)
         append_row_to_file([url, actual_url], 'actual_songs.csv')
-
-
 
 
 discogs_base_url = 'https://www.discogs.com'

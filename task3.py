@@ -1,7 +1,6 @@
 from database_interface import *
 import task2
 from matplotlib import pyplot as plt
-import numpy as np
 import regex
 
 
@@ -9,6 +8,7 @@ def util_plot_pie(values: list, labels: list, colors=None):
     plt.pie(values, labels=labels, autopct='%1.1f%%', colors=colors)
     plt.axis('equal')
     plt.show()
+
 
 def merged_genres():
     genres = task2.a()
@@ -43,6 +43,7 @@ def merged_genres():
 
     return genres
 
+
 def a(top: int):
     genres = merged_genres()
 
@@ -62,6 +63,7 @@ def a(top: int):
     labels.append('Other {0}'.format(total-covered))
 
     util_plot_pie(values, labels)
+
 
 def b():
     songs = fetch_all_songs_from_database()
@@ -97,6 +99,7 @@ def b():
         labels[i] = "{0} ({1})".format(labels[i], cnts[i])
     util_plot_pie(cnts, labels)
 
+
 def histogram_helper(data: list, begin: int=0, end: int=0, step: int=0, bins: list= None):
     if bins is None:
         n, bns, patches = plt.hist(data, bins=range(begin, end+step, step), color='#0504aa', alpha=0.7, rwidth=0.85)
@@ -120,8 +123,10 @@ def c():
     histogram_helper(data, 1950, 2019, 1)
     histogram_helper(data, 1950, 2019, 10)
 
+
 def is_cyrillic(string: str):
     return regex.search(r'\p{IsCyrillic}', string) is not None
+
 
 def d():
     albums = fetch_all_albums_from_database()
@@ -141,6 +146,7 @@ def d():
 
     util_plot_pie(values, labels, colors)
 
+
 # TODO check
 def e():
     albums = fetch_all_albums_from_database()
@@ -158,7 +164,6 @@ def e():
             n-=1
         if 'Stage' in album['genre']:
             n-=1
-
 
         if n >= len(values):
             n = len(values)
