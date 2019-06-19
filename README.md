@@ -1,4 +1,14 @@
-# psz_proj
+# PSZ proj
+
+This school project was created for the [PSZ (Pronalaženje Skrivenog Znanja, en. Data Mining and Semantic Web) course][psz], 
+which is part of the Master studies at the [School of Electrical Engineering][school], [University of Belgrade][uni].
+
+The project consisted of crawling the [discogs][discogs] website in order to gather data for albums, artists and songs.
+After gathering it, the raw data was pre-processed and then stored in a SQLite database (the ```psz_database.db``` file
+in the ```data``` folder), which was the first task of the project. The remaining 4 tasks were centered around processing
+the data, visualizing it and running unsupervised learning algorithms (in my case only clustering algorithms).
+
+The whole [project statement][statement] (in Serbian) is located in the ```docs``` folder.
 
 ## Requirements
 
@@ -17,7 +27,7 @@ You will also need the following python packages:
  - bokeh
 
 
-### Scraping 
+## Scraping 
 
 The data on the pages can be structured differently, which caused me some difficulties when I tried to scrape it.
 Below are some examples of the pages with different structures.
@@ -38,4 +48,10 @@ Below are some examples of the pages with different structures.
    - [album with some credits for song](https://www.discogs.com//Various-Radio-Utopia-4-Belgrade-Coffee-Shop/release/142792) → [song with different credits](https://www.discogs.com/composition/0604c137-ac24-4f15-9d4b-61b551912a93-Svitac)
    - [album with credits for songs](https://www.discogs.com/To%C5%A1e-Proeski-Secret-Place/release/12749465) → [sogn with no credits](https://www.discogs.com/composition/c61866a0-b099-4d84-9a78-399a68ef4844-Light-The-Flame)
 
+
+[psz]: http://rti.etf.bg.ac.rs/rti/ms1psz/
+[school]: https://www.etf.bg.ac.rs/
+[uni]: https://www.bg.ac.rs/
+[discogs]: https://www.discogs.com/
+[statement]: docs/PSZ_Projekat_2019_v1.0.pdf
 [python3]: https://www.python.org/downloads/
